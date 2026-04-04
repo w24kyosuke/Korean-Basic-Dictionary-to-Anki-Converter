@@ -33,6 +33,8 @@ def generate_anki_csv(json_dir, output_csv_path):
             sup_no = word_info.get('sup_no', '')
             if sup_no == '0': sup_no = ''
             
+            word_no = word_info.get('word_no', '')
+
             grade = word_info.get('im_cnt', '')
             key = (word, sup_no)
             sense_list = sense_info.get('senseDataList', [])
@@ -41,6 +43,7 @@ def generate_anki_csv(json_dir, output_csv_path):
                 merged_items[key] = {
                     'word': word,
                     'sup_no': sup_no,
+                    'word_no': word_no,
                     'sp_code_name': word_info.get('sp_code_name', ''),
                     'pronun_list': word_info.get('pronunList', []),
                     'senses': sense_list.copy(),
@@ -60,12 +63,13 @@ def generate_anki_csv(json_dir, output_csv_path):
     with open(output_csv_path, 'w', encoding='utf-8', newline='') as csvfile:
         writer = csv.writer(csvfile)
         # Ankiのフィールドにマッピングしやすいようにヘッダーを出力
-        headers = ['표제어', '동형어 번호', '품사_한국어', '품사_일본어', '발음', '오디오', '의미_목록', '테그']
+        headers = ['표제어', '동형어 번호', '품사_한국어', '품사_일본어', '발음', '오디오', '의미_목록', "word_no", '테그']
         writer.writerow(headers)
         
         for key, data_val in merged_items.items():
             word = data_val['word']
             sup_no = data_val['sup_no']
+            word_no = data_val['word_no']
             sp_code_name = data_val['sp_code_name']
             jp_pos = pos_map.get(sp_code_name, sp_code_name)
             pronun_list = data_val['pronun_list']
@@ -106,7 +110,7 @@ def generate_anki_csv(json_dir, output_csv_path):
             
             meanings_html = meanings_html.replace('\n', '')
             
-            writer.writerow([word, sup_no, sp_code_name, jp_pos, pronunciation, sound_url, meanings_html, tags_str])
+            writer.writerow([word, sup_no, sp_code_name, jp_pos, pronunciation, sound_url, meanings_html, word_no, tags_str])
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
