@@ -1,0 +1,28 @@
+{{FrontSide}}
+
+<div class="card-container">
+      <div class="info-header">
+            {{#품사_한국어}}
+            <span class="pos-badge">
+                  「{{품사_한국어}}」
+                  <span class="pos-jp">{{품사_일본어}}</span>
+            </span>
+            {{/품사_한국어}}
+
+            {{#발음}}
+            <span class="pronun-text">
+                  [{{발음}}]
+            </span>
+            {{/발음}}
+
+            {{#오디오}}
+            <span class="audio-btn">
+                  <audio src="{{오디오}}" controls preload="none"></audio>
+            </span>
+            {{/오디오}}
+      </div>
+
+      <div class="meanings-container">
+            {{의미_목록}}
+      </div>
+</div>
