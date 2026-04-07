@@ -27,7 +27,12 @@
     font-size: 14px;
     margin-left: 2px;
 }
-
+/* ---------- 原語（漢字など） ---------- */
+.original-word {
+    font-size: 18px;
+    margin-right: 5px;
+    font-weight: normal;
+}
 /* ---------- 品詞と発音 ---------- */
 .info-header {
     margin-bottom: 25px;
@@ -83,4 +88,20 @@ audio {
     font-size: 15px;
     font-weight: bold;
     line-height: 1.6;
+}
+
+/* ---------- 例文リスト ---------- */
+.sense-examples li {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 6px;
+}
+
+.sense-examples b {
+    font-weight: 600;
+}
+
+/* ---------- 例文リスト ---------- */
+a {
+    font-size: 20px; 
 }

@@ -8,7 +8,7 @@ def generate_anki_csv(json_dir, output_csv_path):
         "명사": "名詞", "대명사": "代名詞", "수사": "数詞",
         "조사": "助詞", "동사": "動詞", "형용사": "形容詞",
         "관형사": "連体詞", "부사": "副詞", "감탄사": "感動詞",
-        "접사": "接辞", "의존 명사": "依存名詞", "보조 동사": "補助動詞",
+        "접사": "接辞", "의존 명사": "依存名詞", "보조 동사": "補助동사",
         "보조 형용사": "補助形容詞", "어미": "語尾",
         "관용구": "慣用句", "속담": "ことわざ"
     }
@@ -27,14 +27,15 @@ def generate_anki_csv(json_dir, output_csv_path):
             word_info = item.get('wordInfo', {})
             sense_info = item.get('senseInfo', {})
             
-            word = word_info.get('org_word', word_info.get('word', ''))
+            word = word_info.get('word', word_info.get('org_word', ''))
+            origin = word_info.get('org_language', '')
+            
             if not word: continue
                 
             sup_no = word_info.get('sup_no', '')
             if sup_no == '0': sup_no = ''
             
             word_no = word_info.get('word_no', '')
-
             grade = word_info.get('im_cnt', '')
             key = (word, sup_no)
             sense_list = sense_info.get('senseDataList', [])
@@ -43,6 +44,7 @@ def generate_anki_csv(json_dir, output_csv_path):
                 merged_items[key] = {
                     'word': word,
                     'sup_no': sup_no,
+                    'origin': origin,
                     'word_no': word_no,
                     'sp_code_name': word_info.get('sp_code_name', ''),
                     'pronun_list': word_info.get('pronunList', []),
@@ -62,13 +64,13 @@ def generate_anki_csv(json_dir, output_csv_path):
 
     with open(output_csv_path, 'w', encoding='utf-8', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        # Ankiのフィールドにマッピングしやすいようにヘッダーを出力
-        headers = ['표제어', '동형어 번호', '품사_한국어', '품사_일본어', '발음', '오디오', '의미_목록', "word_no", '테그']
+        headers = ['표제어', '동형어 번호', '원어', '품사_한국어', '품사_일본어', '발음', '오디오', '의미_목록', "word_no", '테그']
         writer.writerow(headers)
         
         for key, data_val in merged_items.items():
             word = data_val['word']
             sup_no = data_val['sup_no']
+            origin = data_val['origin']
             word_no = data_val['word_no']
             sp_code_name = data_val['sp_code_name']
             jp_pos = pos_map.get(sp_code_name, sp_code_name)
@@ -82,7 +84,6 @@ def generate_anki_csv(json_dir, output_csv_path):
                 pronunciation = pronun_list[0].get('pronunciation', '')
                 sound_url = pronun_list[0].get('sound', '')
 
-            # 意味リストのHTML構造化 (レイアウトや余白は一切持たせず、意味構造だけを出力)
             meanings_html = ""
             multi_sense = len(senses) > 1
             
@@ -95,6 +96,39 @@ def generate_anki_csv(json_dir, output_csv_path):
                     multi_translation = multilan_list[0].get('multi_translation', '')
                     multi_definition = multilan_list[0].get('multi_definition', '')
                 
+                examples = []
+                exam_dict = sense.get('examList', {})
+                if isinstance(exam_dict, dict):
+                    for k in sorted(exam_dict.keys()):
+                        ex_list = exam_dict[k]
+                        if not ex_list:
+                            continue
+                            
+                        is_conversation = any(ex.get('exa_type') == '대화' for ex in ex_list)
+                        
+                        if is_conversation:
+                            speakers = ['가', '나', '다', '라']
+                            conv_lines = []
+                            for i, ex in enumerate(ex_list):
+                                ex_text = ex.get('example', '')
+                                if ex_text:
+                                    speaker = speakers[i] if i < len(speakers) else '-'
+                                    conv_lines.append(f"{speaker}: {ex_text}")
+                            
+                            if conv_lines:
+                                examples.append("<br>\n".join(conv_lines) + "<br>")
+                        else:
+                            for ex in ex_list:
+                                ex_text = ex.get('example', '')
+                                if ex_text:
+                                    examples.append(ex_text)
+
+                elif isinstance(exam_dict, list):
+                    for ex in exam_dict:
+                        ex_text = ex.get('example', '')
+                        if ex_text:
+                            examples.append(ex_text)
+                
                 sense_num = f'<span class="sense-num">{idx}. </span>' if multi_sense else ''
                 
                 sense_html = '<div class="sense-item">'
@@ -104,13 +138,20 @@ def generate_anki_csv(json_dir, output_csv_path):
                     sense_html += f'<div class="sense-def-kr">{definition}</div>'
                 if multi_definition:
                     sense_html += f'<div class="sense-def-jp">{multi_definition}</div>'
-                sense_html += '</div>'
                 
+                if examples:
+                    sense_html += '<ul class="sense-examples">'
+                    for ex in examples:
+                        clean_word = word.replace('-', '')
+                        ex_formatted = ex.replace(clean_word, f"<b>{clean_word}</b>")
+                        sense_html += f'<li>{ex_formatted}</li>'
+                    sense_html += '</ul>'
+                sense_html += '</div>'
                 meanings_html += sense_html
             
             meanings_html = meanings_html.replace('\n', '')
-            
-            writer.writerow([word, sup_no, sp_code_name, jp_pos, pronunciation, sound_url, meanings_html, word_no, tags_str])
+            # CSVの各列にデータを流し込む
+            writer.writerow([word, sup_no, origin, sp_code_name, jp_pos, pronunciation, sound_url, meanings_html, word_no, tags_str])
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))

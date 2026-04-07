@@ -2,6 +2,10 @@
 
 <div class="card-container">
       <div class="info-header">
+            {{#원어}}
+            <span class="original-word">({{원어}})</span>
+            {{/원어}}
+
             {{#품사_한국어}}
             <span class="pos-badge">
                   「{{품사_한국어}}」
@@ -27,5 +31,9 @@
       </div>
       <a href="https://krdict.korean.go.kr/jpn/dicSearch/SearchView?ParaWordNo={{word_no}}">辞書ページ</a>
       <br>
+      <a href="https://korean.dict.naver.com/kojadict/#/search?query={{표제어}}">Naver 韓日辞書</a>
+      <br>
       <a href="https://www.google.com/search?q={{표제어}}+意味">Google 検索</a>
+      <br>
+      <a href="https://www.google.com/search?q={{표제어}}という韓国語で例文を作ってください。解説は日本語で&udm=50">Google AI 例文</a>
 </div>
